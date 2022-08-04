@@ -16,10 +16,10 @@ public class MyPublisher implements Flow.Publisher<Long> {
     @Override
     public void subscribe(Flow.Subscriber<? super Long> subscriber) {
         subscriber.onSubscribe(new Flow.Subscription() {
-            AtomicBoolean done = new AtomicBoolean(false);
-            AtomicBoolean started = new AtomicBoolean(false);
-            AtomicLong counter = new AtomicLong();
-            AtomicLong requests = new AtomicLong();
+            final AtomicBoolean done = new AtomicBoolean(false);
+            final AtomicBoolean started = new AtomicBoolean(false);
+            final AtomicLong counter = new AtomicLong();
+            final AtomicLong requests = new AtomicLong();
 
 
             @Override
