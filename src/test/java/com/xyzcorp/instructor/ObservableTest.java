@@ -1,13 +1,11 @@
 package com.xyzcorp.instructor;
 
 import io.reactivex.rxjava3.annotations.NonNull;
-import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.ObservableEmitter;
-import io.reactivex.rxjava3.core.ObservableOnSubscribe;
-import io.reactivex.rxjava3.core.Observer;
+import io.reactivex.rxjava3.core.*;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Action;
 import io.reactivex.rxjava3.functions.Consumer;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
@@ -67,7 +65,7 @@ public class ObservableTest {
                 emitter.onNext(23L);
                 emitter.onNext(35L);
                 emitter.onComplete();
-            });
+            }).subscribeOn(Schedulers.newThread());
 
         Disposable disposable = originalObservable
             .map(i -> i * 3)
@@ -79,7 +77,10 @@ public class ObservableTest {
 
         Disposable disposable1 =
             originalObservable
+                .observeOn(Schedulers.computation())
                 .filter(x -> x % 2 != 0)
+                .doOnNext(v -> debug("S2 After the filter", v))
+                .observeOn(Schedulers.io())
                 .subscribe(
                     x -> debug("S2 (On Next)", x),
                     t -> debug("S2 (Error)", t.getMessage()),
