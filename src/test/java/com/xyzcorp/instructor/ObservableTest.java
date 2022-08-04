@@ -57,19 +57,30 @@ public class ObservableTest {
         // On another fork, filter all the odd numbers
         // Each fork should have its own subscribe
 
-        Disposable disposable = Observable
+        Observable<Long> originalObservable = Observable
             .<Long>create(emitter -> {
                 emitter.onNext(10L);
                 emitter.onNext(20L);
                 emitter.onNext(23L);
                 emitter.onNext(35L);
                 emitter.onComplete();
-            })
+            });
+
+        Disposable disposable = originalObservable
             .map(i -> i * 3)
             .map(String::valueOf)
-            .subscribe(System.out::println,
-                Throwable::printStackTrace,
-                () -> System.out.println("Complete"));
+            .subscribe(
+                x -> System.out.format("S1 (On Next): %s\n", x),
+                t -> System.out.format("S1 (Error): %s\n", t.getMessage()),
+                () -> System.out.println("S1 (Complete)"));
+
+        Disposable disposable1 =
+            originalObservable
+                .filter(x -> x % 2 != 0)
+                .subscribe(
+                    x -> System.out.format("S2 (On Next): %d\n", x),
+                    t -> System.out.format("S2 (Error): %s\n", t.getMessage()),
+                    () -> System.out.println("S2 (Complete"));
     }
 
 }
