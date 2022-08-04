@@ -1,6 +1,6 @@
-package com.xyzcorp;
+package com.xyzcorp.instructor;
 
-import com.xyzcorp.MyPublisher;
+import com.xyzcorp.instructor.MyPublisher;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutorService;
