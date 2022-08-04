@@ -4,10 +4,13 @@ import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableEmitter;
 import io.reactivex.rxjava3.core.ObservableOnSubscribe;
+import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Action;
 import io.reactivex.rxjava3.functions.Consumer;
 import org.junit.Test;
+
+import java.util.concurrent.TimeUnit;
 
 public class ObservableTest {
 
@@ -70,17 +73,67 @@ public class ObservableTest {
             .map(i -> i * 3)
             .map(String::valueOf)
             .subscribe(
-                x -> System.out.format("S1 (On Next): %s\n", x),
-                t -> System.out.format("S1 (Error): %s\n", t.getMessage()),
-                () -> System.out.println("S1 (Complete)"));
+                x -> debug("S1 (On Next)", x),
+                t -> debug("S1 (Error)", t.getMessage()),
+                () -> debug("S1 (Complete)", ""));
 
         Disposable disposable1 =
             originalObservable
                 .filter(x -> x % 2 != 0)
                 .subscribe(
-                    x -> System.out.format("S2 (On Next): %d\n", x),
-                    t -> System.out.format("S2 (Error): %s\n", t.getMessage()),
-                    () -> System.out.println("S2 (Complete"));
+                    x -> debug("S2 (On Next)", x),
+                    t -> debug("S2 (Error)", t.getMessage()),
+                    () -> debug("S2 (Complete)", ""));
     }
 
+    public <A> void debug(String label, A a) {
+        System.out.printf("%s: %s - %s\n", label, a,
+            Thread.currentThread().getName());
+    }
+
+    @Test
+    public void testInterval() throws InterruptedException {
+        //`Disposable//
+        Disposable subscribe = Observable
+            .interval(1, TimeUnit.SECONDS)
+            .doOnNext(x -> debug("in doOnNext: ", x))
+            .subscribe(System.out::println);
+        Thread.sleep(4000);
+        subscribe.dispose();
+        System.out.println("The flow should close");
+        Thread.sleep(5000);
+    }
+
+    @Test
+    public void testIntervalShutOffFlowFromWithin() throws InterruptedException {
+        //`Disposable//
+        Observable
+            .interval(1, TimeUnit.SECONDS)
+            .doOnNext(x -> debug("in doOnNext: ", x))
+            .subscribe(new Observer<Long>() {
+                private Disposable d;
+
+                @Override
+                public void onSubscribe(@NonNull Disposable d) {
+                    this.d = d;
+                }
+
+                @Override
+                public void onNext(@NonNull Long aLong) {
+                    System.out.println(aLong);
+                    if (aLong == 5) d.dispose();
+                }
+
+                @Override
+                public void onError(@NonNull Throwable e) {
+                    e.printStackTrace();
+                }
+
+                @Override
+                public void onComplete() {
+                    System.out.println("OnComplete");
+                }
+            });
+        Thread.sleep(10000);
+    }
 }
